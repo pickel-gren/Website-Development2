@@ -9,6 +9,11 @@ class ApiError extends Error {
 }
 
 async function handleResponse(response) {
+  // 304 has no body - don\'t try to parse JSON
+  if (response.status === 304) {
+    return {};
+  }
+
   const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -27,8 +32,11 @@ export const categoriesApi = {
     const response = await fetch(API_ENDPOINTS.CATEGORIES, {
       credentials: "include",
       method: "GET",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
       },
     });
 
@@ -46,8 +54,11 @@ export const productsApi = {
     const response = await fetch(url, {
       credentials: "include",
       method: "GET",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
+        "Pragma": "no-cache",
       },
     });
 
@@ -61,8 +72,10 @@ export const cartApi = {
     const response = await fetch(API_ENDPOINTS.CART, {
       credentials: "include",
       method: "GET",
+      cache: "no-store",
       headers: {
         "Content-Type": "application/json",
+        "Cache-Control": "no-cache",
       },
     });
 

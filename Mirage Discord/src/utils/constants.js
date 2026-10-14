@@ -12,6 +12,7 @@ export const CATEGORY_INFO = {
     description:
       "Get instant delivery of purchase. We deeply appreciate your love and kindness for donating !! 💖",
   },
+
   [CATEGORY_KEYS.DIAMONDS]: {
     label: "Diamonds",
     heading: "Diamonds",
@@ -19,6 +20,7 @@ export const CATEGORY_INFO = {
     description:
       "Get the diamonds you need to level up your game. Delivered instantly to your account! 💸",
   },
+
   [CATEGORY_KEYS.GIFTCARDS]: {
     label: "Gift Cards",
     heading: "Gift Cards",

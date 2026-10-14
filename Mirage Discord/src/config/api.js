@@ -1,4 +1,5 @@
-const API_BASE = import.meta.env.VITE_PORT_URL || "http://localhost:3000/api";
+const API_BASE =
+  import.meta.env.VITE_PORT_URL || "http://localhost:3000/api";
 
 export const API_ENDPOINTS = {
   DISCORD_LOGIN: `${API_BASE}/user/auth/discord`,
@@ -10,7 +11,8 @@ export const API_ENDPOINTS = {
   PRODUCTS: `${API_BASE}/products`,
 
   CART: `${API_BASE}/cart`,
-  CART_ITEM: (productId) => `${API_BASE}/cart/items/${productId}`,
+  CART_ITEM: (productId) =>
+    `${API_BASE}/cart/items/${productId}`,
 };
 
 export default API_ENDPOINTS;

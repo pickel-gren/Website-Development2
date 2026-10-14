@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
+import {
+  LogIn,
+  LogOut,
+  ShoppingCart,
+  X,
+  Minus,
+  Plus,
+} from "lucide-react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 import { useAuth } from "../hooks/useAuth";
 import { clearLocationPersistence } from "../hooks/useLocationPersistence";
 
@@ -8,19 +17,16 @@ export default function Header({
   removeFromCart,
   updateCartQuantity,
   clearCart,
-  className,
 }) {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    clearLocationPersistence();
-    setShowLogoutConfirm(false);
-    navigate("/login");
-  };
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] =
+    useState(false);
+
+  const cartItems = cart?.items || [];
+  const cartItemCount = cartItems.length;
 
   const handleCartClick = () => {
     if (!user) {
@@ -28,210 +34,259 @@ export default function Header({
       return;
     }
 
-    setIsCartOpen(!isCartOpen);
+    setIsCartOpen(true);
   };
 
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleConfirmLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      clearLocationPersistence();
+      setShowLogoutConfirm(false);
+      navigate("/login");
+    }
+  };
+
+  const getItemId = (item) => item.productId || item.id;
+
   return (
-    <header
-      className={`w-full px-6 py-4 flex items-center justify-between backdrop-blur-lg border-b border-white/10 sticky top-0 z-50 ${className}`}
-      style={{
-        background: "rgba(255, 255, 255, 0.05)",
-        backdropFilter: "blur(10px)",
-      }}
-      data-header
-    >
-      <div
-        className="flex items-center gap-2 cursor-pointer"
-        onClick={() => navigate("/")}
-      >
-        <img
-          src="/house.png"
-          alt="Mirage Store"
-          className="w-8 h-8 object-contain select-none"
-          draggable={false}
-          onContextMenu={(e) => e.preventDefault()}
-        />
-        <span
-          className="text-xl font-extrabold text-white tracking-wider"
-          style={{
-            fontFamily: "'Josefin Sans', sans-serif",
-            textShadow: "0 2px 8px rgba(255, 255, 255, 0.3)",
-          }}
-        >
-          Mirage Store
-        </span>
-      </div>
+    <>
+      {/* Header */}
+      <div className="relative z-[1000] mx-auto mt-4 w-[94vw] max-w-[1500px] rounded-3xl border border-white/25 bg-white/10 p-1 shadow-[0_0_30px_rgba(100,80,180,0.2)] backdrop-blur-2xl">
+        <header className="flex min-h-[82px] w-full items-center justify-between gap-4 rounded-[22px] px-4 py-4 font-['Josefin_Sans'] sm:px-6 lg:px-8">
+          {/* Logo and welcome text */}
+          <div className="flex min-w-0 items-center gap-3 sm:gap-5">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/30 bg-white/15 p-1 sm:h-14 sm:w-14">
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="User avatar"
+                  className="h-full w-full rounded-full object-cover"
+                  draggable={false}
+                />
+              ) : (
+                <img
+                  src="/house.png"
+                  alt="Mirage Store"
+                  className="h-full w-full object-contain"
+                  draggable={false}
+                />
+              )}
+            </div>
 
-      <div className="flex items-center gap-6">
-        <button
-          onClick={handleCartClick}
-          className="relative p-2 rounded-lg hover:bg-white/10 transition-all"
-          aria-label="Shopping Cart"
-        >
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            viewBox="0 0 24 24"
-          >
-            <circle cx="9" cy="21" r="1" />
-            <circle cx="20" cy="21" r="1" />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61l1.38-7.39H6"
-            />
-          </svg>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-semibold tracking-wide text-white/60 sm:text-base">
+                {user
+                  ? `Welcome, ${user.username}`
+                  : "Welcome To Mirage Store"}
+              </p>
 
-          {cart?.items?.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-              {cart.items.length}
-            </span>
-          )}
-        </button>
+              <h1 className="truncate text-lg font-extrabold tracking-[0.12em] text-[#f5e7c6] sm:text-2xl">
+                Mirage Store
+              </h1>
+            </div>
+          </div>
 
-        {user ? (
-          <div className="flex items-center gap-3">
-            <img
-              src={user.avatar}
-              alt="User Avatar"
-              className="w-8 h-8 rounded-full object-cover border border-white/20"
-              onContextMenu={(e) => e.preventDefault()}
-              draggable={false}
-            />
-            <span className="text-white font-semibold hidden sm:inline text-sm">
-              {user.username}
-            </span>
+          {/* Header actions */}
+          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+            {user ? (
+              <button
+                type="button"
+                onClick={handleLogoutClick}
+                className="header-design-button"
+                aria-label="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigate("/login")}
+                className="header-design-button"
+                aria-label="Login"
+              >
+                <LogIn className="h-4 w-4" />
+                <span className="hidden sm:inline">Login</span>
+              </button>
+            )}
 
             <button
-              onClick={() => setShowLogoutConfirm(true)}
-              className="px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-600 text-white font-semibold transition-all text-sm"
+              type="button"
+              onClick={handleCartClick}
+              className="header-design-button relative"
+              aria-label={`View cart with ${cartItemCount} item${
+                cartItemCount === 1 ? "" : "s"
+              }`}
             >
-              Logout
+              <ShoppingCart className="h-5 w-5" />
+
+              <span className="hidden sm:inline">Cart</span>
+
+              {cartItemCount > 0 && (
+                <span className="absolute -right-2 -top-3 flex h-6 min-w-6 items-center justify-center rounded-full bg-[#d95c68] px-1.5 text-xs font-extrabold text-white">
+                  {cartItemCount}
+                </span>
+              )}
             </button>
           </div>
-        ) : (
-          <button
-            onClick={() => navigate("/login")}
-            className="px-4 py-2 rounded-lg bg-[#5865F2]/80 hover:bg-[#5865F2] text-white font-semibold transition-all text-sm"
-          >
-            Login
-          </button>
-        )}
+        </header>
       </div>
 
+      {/* Cart modal */}
       {isCartOpen && (
         <div
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-[3000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
           onClick={() => setIsCartOpen(false)}
-          style={{ background: "rgba(0, 0, 0, 0.5)" }}
-        />
-      )}
-
-      {isCartOpen && (
-        <div
-          className="fixed right-0 top-0 h-full w-full max-w-md bg-white/10 backdrop-blur-xl border-l border-white/20 shadow-2xl overflow-y-auto z-50"
-          style={{ animation: "slideInRight 0.3s ease-out" }}
         >
-          <div className="sticky top-0 bg-white/10 backdrop-blur-xl p-6 border-b border-white/20 flex items-center justify-between">
-            <h2 className="text-2xl font-extrabold text-white">Your Cart</h2>
-            <button
-              onClick={() => setIsCartOpen(false)}
-              className="text-white/70 hover:text-white transition-all"
-              aria-label="Close Cart"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <div
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-3xl border border-white/25 bg-[#202033]/95 p-5 shadow-2xl sm:p-7"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* Cart heading */}
+            <div className="mb-6 flex items-center justify-between border-b border-white/15 pb-4">
+              <h2 className="text-2xl font-extrabold text-white">
+                Your Cart
+              </h2>
 
-          <div className="p-6 space-y-4">
-            {cart?.items?.length === 0 ? (
-              <p className="text-white/70 text-center py-8">Your cart is empty</p>
+              <button
+                type="button"
+                onClick={() => setIsCartOpen(false)}
+                className="rounded-lg p-1 text-white/60 hover:bg-white/10 hover:text-white"
+                aria-label="Close cart"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {cartItems.length === 0 ? (
+              <p className="py-12 text-center text-white/65">
+                Your cart is empty.
+              </p>
             ) : (
               <>
-                {cart.items.map((item) => (
-                  <div
-                    key={item.productId || item.id}
-                    className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-lg p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <h3 className="text-white font-semibold">{item.name}</h3>
-                        <p className="text-white/60 text-sm">
-                          ${Number(item.price).toFixed(2)}
-                        </p>
+                <div className="space-y-4">
+                  {cartItems.map((item) => {
+                    const itemId = getItemId(item);
+                    const quantity = item.quantity || 1;
+
+                    return (
+                      <div
+                        key={itemId}
+                        className="flex gap-4 rounded-2xl border border-white/15 bg-white/[0.08] p-4"
+                      >
+                        {/* Product image */}
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/10 p-2">
+                          <img
+                            src={
+                              item.image || "/placeholder.svg"
+                            }
+                            alt={item.name || "Product"}
+                            className="h-full w-full object-contain"
+                            draggable={false}
+                          />
+                        </div>
+
+                        {/* Product information */}
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="min-w-0">
+                              <h3 className="truncate font-bold text-white">
+                                {item.name}
+                              </h3>
+
+                              <p className="mt-1 text-sm text-white/60">
+                                $
+                                {Number(item.price).toFixed(2)}
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeFromCart(itemId)
+                              }
+                              className="shrink-0 rounded-lg p-1 text-red-300 hover:bg-red-400/10 hover:text-red-200"
+                              aria-label={`Remove ${item.name} from cart`}
+                            >
+                              <X className="h-5 w-5" />
+                            </button>
+                          </div>
+
+                          {/* Quantity controls */}
+                          <div className="mt-4 flex items-center gap-3">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCartQuantity(
+                                  itemId,
+                                  quantity - 1,
+                                )
+                              }
+                              className="rounded-lg border border-white/15 bg-white/10 p-1.5 text-white hover:bg-white/20"
+                              aria-label="Decrease quantity"
+                            >
+                              <Minus className="h-4 w-4" />
+                            </button>
+
+                            <span className="min-w-6 text-center font-bold text-white">
+                              {quantity}
+                            </span>
+
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCartQuantity(
+                                  itemId,
+                                  quantity + 1,
+                                )
+                              }
+                              className="rounded-lg border border-white/15 bg-white/10 p-1.5 text-white hover:bg-white/20"
+                              aria-label="Increase quantity"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      <button
-                        onClick={() => removeFromCart(item.productId || item.id)}
-                        className="text-red-400 hover:text-red-600 transition-all"
-                        aria-label="Remove from cart"
-                      >
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M6 18L18 6M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                        </svg>
-                      </button>
-                    </div>
+                {/* Cart footer */}
+                <div className="mt-7 border-t border-white/15 pt-5">
+                  <div className="mb-5 flex items-center justify-between">
+                    <span className="text-lg text-white/65">
+                      Total
+                    </span>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() =>
-                          updateCartQuantity(
-                            item.productId || item.id,
-                            (item.quantity || 1) - 1,
-                          )
-                        }
-                        className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white font-semibold transition-all"
-                      >
-                        −
-                      </button>
-
-                      <span className="text-white font-semibold flex-1 text-center">
-                        {item.quantity || 1}
-                      </span>
-
-                      <button
-                        onClick={() =>
-                          updateCartQuantity(
-                            item.productId || item.id,
-                            (item.quantity || 1) + 1,
-                          )
-                        }
-                        className="px-3 py-1 rounded bg-white/10 hover:bg-white/20 text-white font-semibold transition-all"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-                ))}
-
-                <div className="border-t border-white/20 pt-4 mt-4">
-                  <div className="flex justify-between items-center mb-4">
-                    <span className="text-white/70 text-lg">Total:</span>
-                    <span className="text-white text-2xl font-extrabold">
-                      ${Number(cart.total || 0).toFixed(2)}
+                    <span className="text-2xl font-extrabold text-white">
+                      ${Number(cart?.total || 0).toFixed(2)}
                     </span>
                   </div>
 
                   <button
+                    type="button"
                     onClick={() => {
-                      navigate("/cart", { state: { cart } });
                       setIsCartOpen(false);
+                      navigate("/cart");
                     }}
-                    className="w-full py-3 rounded-lg bg-gradient-to-r from-[#5865F2] to-[#a78bfa] hover:from-[#a78bfa] hover:to-[#5865F2] text-white font-bold transition-all shadow-lg"
+                    className="w-full rounded-xl border border-indigo-300/30 bg-indigo-500/80 px-4 py-3 font-bold text-white hover:bg-indigo-500"
                   >
                     Proceed to Checkout
                   </button>
 
                   <button
+                    type="button"
                     onClick={() => {
                       clearCart();
                       setIsCartOpen(false);
                     }}
-                    className="w-full mt-2 py-3 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 font-semibold transition-all"
+                    className="mt-3 w-full rounded-xl border border-red-300/20 bg-red-500/15 px-4 py-3 font-semibold text-red-200 hover:bg-red-500/25"
                   >
                     Clear Cart
                   </button>
@@ -242,37 +297,75 @@ export default function Header({
         </div>
       )}
 
+      {/* Logout confirmation */}
       {showLogoutConfirm && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-[4000] flex items-center justify-center bg-black/60 p-4 backdrop-blur-md"
           onClick={() => setShowLogoutConfirm(false)}
-          style={{ background: "rgba(0, 0, 0, 0.7)" }}
         >
           <div
-            className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 max-w-sm"
-            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-sm rounded-3xl border border-white/20 bg-white/95 p-7 text-center shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
           >
-            <h3 className="text-xl font-extrabold text-white mb-4">Confirm Logout</h3>
-            <p className="text-white/70 mb-6">Are you sure you want to logout?</p>
+            <h2 className="mb-2 text-xl font-extrabold text-gray-900">
+              Logout
+            </h2>
+
+            <p className="mb-6 text-gray-500">
+              Are you sure you want to logout?
+            </p>
 
             <div className="flex gap-3">
               <button
+                type="button"
                 onClick={() => setShowLogoutConfirm(false)}
-                className="flex-1 px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20 text-white font-semibold transition-all"
+                className="flex-1 rounded-xl border border-gray-300 bg-white px-4 py-2 font-semibold text-gray-700 hover:bg-gray-100"
               >
                 Cancel
               </button>
 
               <button
-                onClick={handleLogout}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-500/80 hover:bg-red-600 text-white font-semibold transition-all"
+                type="button"
+                onClick={handleConfirmLogout}
+                className="flex-1 rounded-xl bg-[#c95563] px-4 py-2 font-semibold text-white hover:bg-[#b64956]"
               >
-                Logout
+                Confirm
               </button>
             </div>
           </div>
         </div>
       )}
-    </header>
+
+      <style>{`
+        .header-design-button {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 0.5rem;
+          min-height: 42px;
+          padding: 0.55rem 1rem;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          border-radius: 0.75rem;
+          background: rgba(34, 34, 55, 0.58);
+          color: rgba(255, 255, 255, 0.86);
+          font-weight: 700;
+          cursor: pointer;
+        }
+
+        .header-design-button:hover,
+        .header-design-button:focus-visible {
+          background: rgba(63, 63, 92, 0.8);
+          color: #ffffff;
+          outline: none;
+        }
+
+        @media (max-width: 640px) {
+          .header-design-button {
+            min-height: 40px;
+            padding: 0.5rem 0.7rem;
+          }
+        }
+      `}</style>
+    </>
   );
 }

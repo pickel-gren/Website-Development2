@@ -1,25 +1,45 @@
 import { useEffect, useState } from "react";
+
 import Header from "../components/Header.jsx";
 import LogoAndJoinSection from "../components/LogoAndJoinSection.jsx";
 import MainContent from "../components/MainContent.jsx";
-import Footer from "../components/Footer";
-import Disclaimer from "../components/Disclaimer";
+import Footer from "../components/Footer.jsx";
+import Disclaimer from "../components/Disclaimer.jsx";
+
 import { useLocationPersistence } from "../hooks/useLocationPersistence";
 import { useAuth } from "../hooks/useAuth";
 import { useCart } from "../hooks/useCart";
-import { categoriesApi, productsApi } from "../services/shopApi";
-import { DEFAULT_CATEGORY } from "../utils/constants";
+
+import {
+  categoriesApi,
+  productsApi,
+} from "../services/shopApi";
+
+import {
+  DEFAULT_CATEGORY,
+} from "../utils/constants";
+
 import "../index.css";
 import styles1 from "../assets/style";
 
 export default function Home() {
-  const { user, loading: userLoading } = useAuth();
-  const { cart, restoreCart, addToCart, removeFromCart, updateCartQuantity, clearCart } =
-    useCart(user);
+  const { user } = useAuth();
 
-  const [activeTab, setActiveTab] = useState(DEFAULT_CATEGORY);
+  const {
+    cart,
+    restoreCart,
+    addToCart,
+    removeFromCart,
+    updateCartQuantity,
+    clearCart,
+  } = useCart(user);
+
+  const [activeTab, setActiveTab] =
+    useState(DEFAULT_CATEGORY);
+
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useLocationPersistence(activeTab, setActiveTab);
 
@@ -40,19 +60,23 @@ export default function Home() {
   }, [user, restoreCart]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    async function fetchProducts() {
       try {
         setLoading(true);
+        setError("");
 
-        const categories = await categoriesApi.getCategories();
-        const allProducts = [];
+        const categories =
+          await categoriesApi.getCategories();
 
-        for (const category of categories) {
-          const products = await productsApi.getProducts(category.key);
-          allProducts.push(...products);
-        }
+        const productLists = await Promise.all(
+          categories.map((category) =>
+            productsApi.getProducts(category.key),
+          ),
+        );
 
-        const normalized = allProducts.map((item) => ({
+        const allProducts = productLists.flat();
+
+        const normalizedProducts = allProducts.map((item) => ({
           id: item.id,
           name: item.name,
           price: Number(item.price),
@@ -61,13 +85,20 @@ export default function Home() {
           image: item.image || "",
         }));
 
-        setItems(normalized);
-      } catch (error) {
-        console.error("Failed to load products:", error);
+        setItems(normalizedProducts);
+      } catch (fetchError) {
+        console.error(
+          "Failed to load products:",
+          fetchError,
+        );
+
+        setError(
+          "Unable to load products. Please try again later.",
+        );
       } finally {
         setLoading(false);
       }
-    };
+    }
 
     fetchProducts();
   }, []);
@@ -82,26 +113,43 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-transparent text-white font-sans relative overflow-hidden">
+    <div className="min-h-screen">
       <Header
         cart={cart}
         removeFromCart={removeFromCart}
         updateCartQuantity={updateCartQuantity}
         clearCart={clearCart}
       />
+
       <LogoAndJoinSection />
-      <MainContent
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        items={items}
-        addToCart={addItemToCart}
-        cart={cart}
-        updateCartQuantity={updateCartQuantity}
-        user={user}
-        loading={loading}
-      />
+
+      {loading && (
+        <p className="py-12 text-center text-white">
+          Loading products...
+        </p>
+      )}
+
+      {error && (
+        <p className="py-12 text-center text-red-300">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && (
+        <MainContent
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          items={items}
+          addToCart={addItemToCart}
+          cart={cart}
+          updateCartQuantity={updateCartQuantity}
+          user={user}
+        />
+      )}
+
       <Footer />
       <Disclaimer />
     </div>
   );
 }
+
